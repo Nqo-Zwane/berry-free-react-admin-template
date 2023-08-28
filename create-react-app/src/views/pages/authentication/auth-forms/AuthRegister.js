@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
+
+
 
 // material-ui
 import { useTheme } from '@mui/material/styles';
@@ -19,12 +21,18 @@ import {
   OutlinedInput,
   TextField,
   Typography,
-  useMediaQuery
+  useMediaQuery,
+  Alert
 } from '@mui/material';
 
 // third party
 import * as Yup from 'yup';
 import { Formik } from 'formik';
+import axios from 'axios'; 
+
+//api
+
+import { registerUser } from '../../../utilities/registerUser';
 
 // project imports
 import useScriptRef from 'hooks/useScriptRef';
@@ -39,12 +47,17 @@ import VisibilityOff from '@mui/icons-material/VisibilityOff';
 // ===========================|| FIREBASE - REGISTER ||=========================== //
 
 const FirebaseRegister = ({ ...others }) => {
+  const navigate = useNavigate();
   const theme = useTheme();
   const scriptedRef = useScriptRef();
   const matchDownSM = useMediaQuery(theme.breakpoints.down('md'));
   const customization = useSelector((state) => state.customization);
   const [showPassword, setShowPassword] = useState(false);
   const [checked, setChecked] = useState(true);
+
+  const [registrationSuccess, setRegistrationSuccess] = useState(null);
+  const [registrationError, setRegistrationError] = useState(null);
+
 
   const [strength, setStrength] = useState(0);
   const [level, setLevel] = useState();
@@ -70,7 +83,6 @@ const FirebaseRegister = ({ ...others }) => {
   useEffect(() => {
     changePassword('123456');
   }, []);
-
   return (
     <>
       <Grid container direction="column" justifyContent="center" spacing={2}>
@@ -125,31 +137,39 @@ const FirebaseRegister = ({ ...others }) => {
       </Grid>
 
       <Formik
+       
+        
         initialValues={{
+          firstname: '',
+          lastname: '',
           email: '',
           password: '',
+          username: '',
           submit: null
         }}
         validationSchema={Yup.object().shape({
           email: Yup.string().email('Must be a valid email').max(255).required('Email is required'),
-          password: Yup.string().max(255).required('Password is required')
+          password: Yup.string().max(255).required('Password is required'),
+          username: Yup.string().max(255).required('Username is required')
         })}
         onSubmit={async (values, { setErrors, setStatus, setSubmitting }) => {
-          try {
-            if (scriptedRef.current) {
-              setStatus({ success: true });
-              setSubmitting(false);
-            }
-          } catch (err) {
-            console.error(err);
-            if (scriptedRef.current) {
-              setStatus({ success: false });
-              setErrors({ submit: err.message });
-              setSubmitting(false);
-            }
-          }
-        }}
-      >
+        try {
+          const response = await registerUser(values);
+          console.log(response)
+
+          if (response) {
+            setRegistrationSuccess(response);
+            navigate("/pages/login/login3", { state: { registrationSuccess: true } });
+           
+          } 
+        } catch (error) {
+          console.error('Error registering user:', error);
+          setRegistrationError(error);
+        } finally {
+          setSubmitting(false);
+        }
+      }}
+  >
         {({ errors, handleBlur, handleChange, handleSubmit, isSubmitting, touched, values }) => (
           <form noValidate onSubmit={handleSubmit} {...others}>
             <Grid container spacing={matchDownSM ? 0 : 2}>
@@ -177,7 +197,7 @@ const FirebaseRegister = ({ ...others }) => {
               </Grid>
             </Grid>
             <FormControl fullWidth error={Boolean(touched.email && errors.email)} sx={{ ...theme.typography.customInput }}>
-              <InputLabel htmlFor="outlined-adornment-email-register">Email Address / Username</InputLabel>
+              <InputLabel htmlFor="outlined-adornment-email-register">Email Address</InputLabel>
               <OutlinedInput
                 id="outlined-adornment-email-register"
                 type="email"
@@ -190,6 +210,23 @@ const FirebaseRegister = ({ ...others }) => {
               {touched.email && errors.email && (
                 <FormHelperText error id="standard-weight-helper-text--register">
                   {errors.email}
+                </FormHelperText>
+              )}
+            </FormControl>
+            <FormControl fullWidth error={Boolean(touched.username && errors.username)} sx={{ ...theme.typography.customInput }}>
+              <InputLabel htmlFor="outlined-adornment-username-register">Username</InputLabel>
+              <OutlinedInput
+                id="outlined-adornment-email-register"
+                type="username"
+                value={values.username}
+                name="username"
+                onBlur={handleBlur}
+                onChange={handleChange}
+                inputProps={{}}
+              />
+              {touched.username && errors.username && (
+                <FormHelperText error id="standard-weight-helper-text--register">
+                  {errors.username}
                 </FormHelperText>
               )}
             </FormControl>
@@ -269,11 +306,19 @@ const FirebaseRegister = ({ ...others }) => {
               </Box>
             )}
 
+          {/* Conditionally render the error message */}
+  
+              {registrationError && (
+                <Box mt={2}>
+                  <Alert severity="error">{registrationError}</Alert>
+                </Box>
+              )}
+
             <Box sx={{ mt: 2 }}>
               <AnimateButton>
-                <Button disableElevation disabled={isSubmitting} fullWidth size="large" type="submit" variant="contained" color="secondary">
-                  Sign up
-                </Button>
+              <Button disableElevation disabled={isSubmitting} fullWidth size="large" type="submit" variant="contained" color="secondary">
+            Sign up
+          </Button>
               </AnimateButton>
             </Box>
           </form>

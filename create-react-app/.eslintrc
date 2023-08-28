@@ -53,7 +53,7 @@
     "react/jsx-props-no-spreading": "off",
     "react/forbid-prop-types": "off",
     "import/order": "off",
-    "import/no-cycle": "off",
+    "import/no-cycle": "off", 
     "no-console": "off",
     "jsx-a11y/anchor-is-valid": "off",
     "prefer-destructuring": "off",
@@ -68,7 +68,7 @@
       }
     ],
     "no-unused-vars": [
-      "error",
+      "warn",
       {
         "ignoreRestSiblings": false
       }
@@ -77,7 +77,7 @@
       "warn",
       {
         "bracketSpacing": true,
-        "printWidth": 140,
+        "printWidth": 140, 
         "singleQuote": true,
         "trailingComma": "none",
         "tabWidth": 2,

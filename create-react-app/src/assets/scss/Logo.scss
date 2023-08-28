@@ -1,0 +1,14 @@
+// ==============================|| LOGO ||============================== //
+.logo-container {
+    display: flex;
+    align-items: center; // Vertically center items
+  }
+  
+  .logo-text {
+    font-size: 30px;
+    font-weight: 700;
+    color: #012970;
+    font-family: "Nunito", sans-serif;
+    margin-left: 2px; // Adjust the spacing between logo and text
+    text-decoration: none;
+  }

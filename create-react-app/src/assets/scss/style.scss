@@ -1,6 +1,8 @@
 // color variants
 @import 'themes-vars.module.scss';
 
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&display=swap'); /* Import from Google Fonts */
+
 // third-party
 @import '~react-perfect-scrollbar/dist/css/styles.css';
 
@@ -52,6 +54,7 @@
     background-color: transparent;
   }
 }
+
 
 // ==============================|| ANIMATION KEYFRAMES ||============================== //
 

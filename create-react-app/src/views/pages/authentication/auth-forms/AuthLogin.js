@@ -1,5 +1,8 @@
 import { useState } from 'react';
 import { useSelector } from 'react-redux';
+import { useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 // material-ui
 import { useTheme } from '@mui/material/styles';
@@ -18,7 +21,8 @@ import {
   OutlinedInput,
   Stack,
   Typography,
-  useMediaQuery
+  useMediaQuery,
+  Alert
 } from '@mui/material';
 
 // third party
@@ -39,10 +43,24 @@ import Google from 'assets/images/icons/social-google.svg';
 
 const FirebaseLogin = ({ ...others }) => {
   const theme = useTheme();
+  const navigate = useNavigate();
   const scriptedRef = useScriptRef();
   const matchDownSM = useMediaQuery(theme.breakpoints.down('md'));
   const customization = useSelector((state) => state.customization);
   const [checked, setChecked] = useState(true);
+  const [loginSuccess, setLoginSuccess] = useState(null);
+  const [loginError, setLoginError] = useState(null);
+  const [jwtToken, setJwtToken] = useState('');
+
+  const location = useLocation();
+  const registrationSuccess = location.state && location.state.registrationSuccess;
+  const [showTwoFactor, setShowTwoFactor] = useState(false);
+
+
+
+
+
+
 
   const googleHandler = async () => {
     console.error('Login');
@@ -130,24 +148,59 @@ const FirebaseLogin = ({ ...others }) => {
         })}
         onSubmit={async (values, { setErrors, setStatus, setSubmitting }) => {
           try {
-            if (scriptedRef.current) {
-              setStatus({ success: true });
-              setSubmitting(false);
+            const response = await axios.post('http://localhost:5000/api/users/login', {
+              username: values.email,
+              email: values.email,
+              password: values.password,
+            }, {
+
+            });
+
+
+            console.log(response);
+
+            if (response.data.twoFactorEnabled) {
+              // Store the JWT token securely in local storage
+              setJwtToken(response.data.token);
+              localStorage.setItem("token", response.data.token)
+
+              // Login success
+              setLoginSuccess(response.data);
+              navigate('/pages/twoFactor/twoFactor3', { state: { loginSuccess: true } }); // Change to your desired destination
+
+
+
+
+            } else {
+              // Store the JWT token securely in local storage
+              setJwtToken(response.data.token);
+              localStorage.setItem("token", response.data.token);
+              setLoginSuccess(response);
+              // Directly navigate to the main page or dashboard
+              navigate('/');
             }
-          } catch (err) {
-            console.error(err);
-            if (scriptedRef.current) {
-              setStatus({ success: false });
-              setErrors({ submit: err.message });
-              setSubmitting(false);
+          } catch (error) {
+            console.error('Error logging in:', error);
+            if (error.response.data.errors) {
+              const errorMessages = Object.values(error.response.data.erros).flat();
+              setLoginError(errorMessages.join(' '));
             }
+            else {
+              setLoginError(error.response.data);
+            }
+
+
+
+          } finally {
+            setSubmitting(false);
           }
         }}
+
       >
         {({ errors, handleBlur, handleChange, handleSubmit, isSubmitting, touched, values }) => (
           <form noValidate onSubmit={handleSubmit} {...others}>
             <FormControl fullWidth error={Boolean(touched.email && errors.email)} sx={{ ...theme.typography.customInput }}>
-              <InputLabel htmlFor="outlined-adornment-email-login">Email Address / Username</InputLabel>
+              <InputLabel htmlFor="outlined-adornment-email-login">Email Address</InputLabel>
               <OutlinedInput
                 id="outlined-adornment-email-login"
                 type="email"
@@ -155,7 +208,7 @@ const FirebaseLogin = ({ ...others }) => {
                 name="email"
                 onBlur={handleBlur}
                 onChange={handleChange}
-                label="Email Address / Username"
+                label="Email Address"
                 inputProps={{}}
               />
               {touched.email && errors.email && (
@@ -164,6 +217,7 @@ const FirebaseLogin = ({ ...others }) => {
                 </FormHelperText>
               )}
             </FormControl>
+
 
             <FormControl fullWidth error={Boolean(touched.password && errors.password)} sx={{ ...theme.typography.customInput }}>
               <InputLabel htmlFor="outlined-adornment-password-login">Password</InputLabel>
@@ -196,6 +250,7 @@ const FirebaseLogin = ({ ...others }) => {
                 </FormHelperText>
               )}
             </FormControl>
+
             <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={1}>
               <FormControlLabel
                 control={
@@ -212,6 +267,18 @@ const FirebaseLogin = ({ ...others }) => {
                 <FormHelperText error>{errors.submit}</FormHelperText>
               </Box>
             )}
+            {registrationSuccess && (
+              <Box mt={2}>
+                <Alert severity="success">Registration successful! You can now log in.</Alert>
+              </Box>
+            )}
+            {/* Conditionally render the error message */}
+
+            {loginError && (
+              <Box mt={2}>
+                <Alert severity="error">{String(loginError)}</Alert>
+              </Box>
+            )}
 
             <Box sx={{ mt: 2 }}>
               <AnimateButton>
@@ -222,7 +289,7 @@ const FirebaseLogin = ({ ...others }) => {
             </Box>
           </form>
         )}
-      </Formik>
+      </Formik >
     </>
   );
 };

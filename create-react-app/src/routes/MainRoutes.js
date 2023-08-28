@@ -17,6 +17,10 @@ const UtilsTablerIcons = Loadable(lazy(() => import('views/utilities/TablerIcons
 // sample page routing
 const SamplePage = Loadable(lazy(() => import('views/sample-page')));
 
+// invoice page routing
+
+const CreateInvoice = Loadable(lazy(() => import('views/invoices/createInvoice')));
+
 // ==============================|| MAIN ROUTING ||============================== //
 
 const MainRoutes = {
@@ -78,6 +82,15 @@ const MainRoutes = {
         {
           path: 'material-icons',
           element: <UtilsMaterialIcons />
+        }
+      ]
+    },
+    {
+      path: 'invoices',
+      children: [
+        {
+          path: 'create-invoice',
+          element: <CreateInvoice />
         }
       ]
     },
